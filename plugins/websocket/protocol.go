@@ -1,10 +1,10 @@
 package websocket
 
 import (
-	"github.com/Allenxuxu/gev/connection"
-	"github.com/Allenxuxu/gev/log"
-	"github.com/Allenxuxu/gev/plugins/websocket/ws"
 	"github.com/Allenxuxu/ringbuffer"
+	"github.com/huzhao37/gev/connection"
+	"github.com/huzhao37/gev/log"
+	"github.com/huzhao37/gev/plugins/websocket/ws"
 )
 
 // Protocol websocket

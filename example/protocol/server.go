@@ -5,8 +5,8 @@ import (
 	"log"
 	"strconv"
 
-	"github.com/Allenxuxu/gev"
-	"github.com/Allenxuxu/gev/connection"
+	"github.com/huzhao37/gev"
+	"github.com/huzhao37/gev/connection"
 )
 
 type example struct{}

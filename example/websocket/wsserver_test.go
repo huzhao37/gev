@@ -7,11 +7,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Allenxuxu/gev"
-	"github.com/Allenxuxu/gev/connection"
-	"github.com/Allenxuxu/gev/plugins/websocket/ws"
-	"github.com/Allenxuxu/gev/plugins/websocket/ws/util"
 	"github.com/Allenxuxu/toolkit/sync"
+	"github.com/huzhao37/gev"
+	"github.com/huzhao37/gev/connection"
+	"github.com/huzhao37/gev/plugins/websocket/ws"
+	"github.com/huzhao37/gev/plugins/websocket/ws/util"
 	"golang.org/x/net/websocket"
 )
 

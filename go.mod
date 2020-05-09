@@ -1,4 +1,4 @@
-module github.com/Allenxuxu/gev
+module github.com/huzhao37/gev
 
 go 1.13
 

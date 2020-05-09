@@ -6,10 +6,10 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/Allenxuxu/gev/connection"
 	"github.com/Allenxuxu/ringbuffer"
 	"github.com/Allenxuxu/toolkit/convert"
 	"github.com/gobwas/httphead"
+	"github.com/huzhao37/gev/connection"
 )
 
 // MessageType represents the type of a WebSocket message.

@@ -3,10 +3,10 @@ package eventloop
 import (
 	"sync"
 
-	"github.com/Allenxuxu/gev/log"
-	"github.com/Allenxuxu/gev/poller"
 	"github.com/Allenxuxu/toolkit/sync/atomic"
 	"github.com/Allenxuxu/toolkit/sync/spinlock"
+	"github.com/huzhao37/gev/log"
+	"github.com/huzhao37/gev/poller"
 )
 
 // Socket 接口

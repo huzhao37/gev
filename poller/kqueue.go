@@ -6,8 +6,8 @@ import (
 	"errors"
 	"sync"
 
-	"github.com/Allenxuxu/gev/log"
 	"github.com/Allenxuxu/toolkit/sync/atomic"
+	"github.com/huzhao37/gev/log"
 	"golang.org/x/sys/unix"
 )
 

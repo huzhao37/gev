@@ -5,9 +5,9 @@ import (
 	"net/http"
 	_ "net/http/pprof"
 
-	"github.com/Allenxuxu/gev"
-	"github.com/Allenxuxu/gev/connection"
 	"github.com/Allenxuxu/toolkit/sync/atomic"
+	"github.com/huzhao37/gev"
+	"github.com/huzhao37/gev/connection"
 )
 
 // Server example
