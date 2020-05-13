@@ -10,7 +10,7 @@ import (
 	"fmt"
 	"github.com/apache/thrift/lib/go/thrift"
 	"github.com/huzhao37/gev/example/epms/DivModService/protocols/gen-go/cluster"
-	"github.com/huzhao37/gev/example/epms/protocols"
+	nc "github.com/huzhao37/gev/example/epms/protocols/gen-go/ncbaseheader"
 	"github.com/huzhao37/gev/log"
 	"reflect"
 )
@@ -41,7 +41,20 @@ func (t *Thrift) setArgsStructValue(st thrift.TStruct, buffer []byte) error {
 	return nil
 }
 
-func (t *Thrift) GetResultStructValue(st thrift.TStruct) (error, []byte) {
+func (t *Thrift) GetArgsStructBuffer(st thrift.TStruct) (error, []byte) {
+	bufferProt := &thrift.TMemoryBuffer{}
+	iprot := t.protocolFactory.GetProtocol(bufferProt)
+
+	if err := st.Write(iprot); err != nil {
+		return err, nil
+	}
+	if err := iprot.WriteMessageEnd(); err != nil {
+		return err, nil
+	}
+	return nil, bufferProt.Buffer.Bytes()
+}
+
+func (t *Thrift) GetResultStructBuffer(st thrift.TStruct) (error, []byte) {
 	bufferProt := &thrift.TMemoryBuffer{}
 	oprot := t.protocolFactory.GetProtocol(bufferProt)
 
@@ -74,7 +87,7 @@ func (t *Thrift) getResultStruct(resultName string) thrift.TStruct {
 }
 
 //get args &r reply
-func (t *Thrift) GetArgsAndReply(epmsBody *protocols.EpmsBody) (thrift.TStruct, thrift.TStruct) {
+func (t *Thrift) GetArgsAndReply(epmsBody *nc.NcEPMSMsgHeader) (thrift.TStruct, thrift.TStruct) {
 	//todo
 	//根据msgtype,msgname ,protoName 获取相应的入参和出参
 	args := t.getArgsStruct("")

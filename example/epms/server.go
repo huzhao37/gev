@@ -7,6 +7,7 @@ import (
 	"github.com/Allenxuxu/toolkit/sync/atomic"
 	"github.com/huzhao37/gev"
 	"github.com/huzhao37/gev/connection"
+	"github.com/huzhao37/gev/example/epms/DivModService"
 	"github.com/huzhao37/gev/example/epms/protocols"
 	"github.com/huzhao37/gev/example/epms/queue"
 	t "github.com/huzhao37/gev/example/epms/thrift"
@@ -141,6 +142,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	s.RegisterService("cluster", new(DivModService.ClusterHandler), "")
 	log.Info("server start")
 	s.Start()
 }
@@ -199,7 +201,7 @@ func (s *EpmsServer) BusinessHandler(addr string, msg hub.Message) {
 			args, reply := s.thrift.GetArgsAndReply(epmsBody)
 			res := s.BusinessProcessor(nil, servicePath, methodName, args, reply)
 			log.Info("%v", res)
-			err, buffer := s.thrift.GetResultStructValue(reply)
+			err, buffer := s.thrift.GetResultStructBuffer(reply)
 			if err != nil {
 				log.Error("【BusinessHandler】%v", err)
 			}
@@ -244,7 +246,7 @@ func (s *EpmsServer) SystemHandler(addr string, msg hub.Message) {
 			args, reply := s.thrift.GetArgsAndReply(epmsBody)
 			res := s.SystemProcessor(nil, servicePath, methodName, args, reply)
 			log.Info("%v", res)
-			err, buffer := s.thrift.GetResultStructValue(reply)
+			err, buffer := s.thrift.GetResultStructBuffer(reply)
 			if err != nil {
 				log.Error("【SystemHandler】%v", err)
 			}

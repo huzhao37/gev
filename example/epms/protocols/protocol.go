@@ -12,26 +12,26 @@ import (
 )
 
 const epmsHeaderLen = 16
-const SizeOfEpmsBody = int(unsafe.Sizeof(EpmsBody{}))
+const SizeOfEpmsBody = int(unsafe.Sizeof(nc.NcEPMSMsgHeader{}))
 
 //var sizeOfEpmsHeader = int(unsafe.Sizeof(EpmsHeader{}))
 
 type EpmsHeader struct {
 	magicNum int //魔法数(0x33533)
 	version  int //版本(2)
-	bodyLen  int //body长度
+	BodyLen  int //body长度
 	checkSum int //crc32算法(0表示跳过检测)
 }
 
-type EpmsBody struct {
-	MsgType   nc.NcEPMSMsgType // 消息类型
-	MsgName   string           // 消息名称
-	SourceId  int64            // 回复消息和发送结果回复，需要带之前的sourceId
-	ProtoName string           // 消息类型名，用于消息类型校验
-	BufLength int32            // 缓冲块长度 - 【消息内容长度】
-	Buffer    []byte           // 缓存 buf   - 【消息内容二进制块】
-	Option    int32            // 消息选项（0）
-}
+//type EpmsBody struct {
+//	MsgType   nc.NcEPMSMsgType // 消息类型
+//	MsgName   string           // 消息名称
+//	SourceId  int64            // 回复消息和发送结果回复，需要带之前的sourceId
+//	ProtoName string           // 消息类型名，用于消息类型校验
+//	BufLength int32            // 缓冲块长度 - 【消息内容长度】
+//	Buffer    []byte           // 缓存 buf   - 【消息内容二进制块】
+//	Option    int32            // 消息选项（0）
+//}
 
 type EpmsProtocol struct{}
 
@@ -51,7 +51,7 @@ func (d *EpmsProtocol) UnPacket(c *connection.Connection, buffer *ringbuffer.Rin
 			if err != nil {
 				log.Error("[epms-unpack]:%s", err)
 			}
-			epmsHEAD = bytesToEpmsHeader(header)
+			epmsHEAD = BytesToEpmsHeader(header)
 			if epmsHEAD.magicNum != 0x33533 {
 				log.Error("[epms-unpack]:magic error%d", epmsHEAD.magicNum)
 				buffer.VirtualFlush()
@@ -67,8 +67,8 @@ func (d *EpmsProtocol) UnPacket(c *connection.Connection, buffer *ringbuffer.Rin
 				//todo
 			}
 			//数据长度不对应
-			if int(dataLen) != epmsHEAD.bodyLen+16 {
-				log.Error("[epms-unpack]:bodyLen error%d", epmsHEAD.bodyLen)
+			if int(dataLen) != epmsHEAD.BodyLen+16 {
+				log.Error("[epms-unpack]:bodyLen error%d", epmsHEAD.BodyLen)
 				buffer.VirtualFlush()
 				return nil, nil
 			}
@@ -88,7 +88,7 @@ func (d *EpmsProtocol) UnPacket(c *connection.Connection, buffer *ringbuffer.Rin
 //param:data is epms-body,the func add epms-header
 func (d *EpmsProtocol) Packet(c *connection.Connection, data []byte) []byte {
 	dataLen := len(data)
-	header := &EpmsHeader{magicNum: 0x33533, version: 2, checkSum: 0, bodyLen: dataLen}
+	header := &EpmsHeader{magicNum: 0x33533, version: 2, checkSum: 0, BodyLen: dataLen}
 	ret := make([]byte, epmsHeaderLen+dataLen)
 	binary.LittleEndian.PutUint32(ret, uint32(dataLen))
 	copy(ret[:epmsHeaderLen], epmsHeaderToBytes(header))
@@ -105,7 +105,7 @@ func epmsHeaderToBytes(s *EpmsHeader) []byte {
 	x.Data = uintptr(unsafe.Pointer(s))
 	return *(*[]byte)(unsafe.Pointer(&x))
 }
-func EpmsBodyToBytes(s *EpmsBody) []byte {
+func EpmsBodyToBytes(s *nc.NcEPMSMsgHeader) []byte {
 	var x reflect.SliceHeader
 	x.Len = SizeOfEpmsBody
 	x.Cap = SizeOfEpmsBody
@@ -114,14 +114,14 @@ func EpmsBodyToBytes(s *EpmsBody) []byte {
 }
 
 //[]byte to model
-func bytesToEpmsHeader(b []byte) *EpmsHeader {
+func BytesToEpmsHeader(b []byte) *EpmsHeader {
 	return (*EpmsHeader)(unsafe.Pointer(
 		(*reflect.SliceHeader)(unsafe.Pointer(&b)).Data,
 	))
 }
 
-func BytesToEpmsBody(b []byte) *EpmsBody {
-	return (*EpmsBody)(unsafe.Pointer(
+func BytesToEpmsBody(b []byte) *nc.NcEPMSMsgHeader {
+	return (*nc.NcEPMSMsgHeader)(unsafe.Pointer(
 		(*reflect.SliceHeader)(unsafe.Pointer(&b)).Data,
 	))
 }
