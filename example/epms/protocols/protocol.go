@@ -5,6 +5,7 @@ import (
 	"github.com/Allenxuxu/ringbuffer"
 	"github.com/gobwas/pool/pbytes"
 	"github.com/huzhao37/gev/connection"
+	nc "github.com/huzhao37/gev/example/epms/protocols/gen-go/ncbaseheader"
 	"github.com/huzhao37/gev/log"
 	"reflect"
 	"unsafe"
@@ -15,45 +16,6 @@ const SizeOfEpmsBody = int(unsafe.Sizeof(EpmsBody{}))
 
 //var sizeOfEpmsHeader = int(unsafe.Sizeof(EpmsHeader{}))
 
-/**
-消息类型
-**/
-type ncEPMSMsgType int32
-
-const (
-	NC_EPMS_SEND_MSG      ncEPMSMsgType = 0 // 发送消息
-	NC_EPMS_REPLY_MSG     ncEPMSMsgType = 1 // 回复消息
-	NC_EPMS_SEND_SUCCESS  ncEPMSMsgType = 2 // 发送结果 - 成功
-	NC_EPMS_SEND_FAILED   ncEPMSMsgType = 3 // 发送结果 - 失败
-	NC_EPMS_NO_SUBSCRIBER ncEPMSMsgType = 4 // 没有订阅对象
-	NC_EPMS_CONNECT       ncEPMSMsgType = 5 // 连接消息
-	NC_EPMS_DISCONNECT    ncEPMSMsgType = 6 // 断开消息
-	NC_EPMS_HEARTBEAT     ncEPMSMsgType = 7 // 心跳消息
-)
-
-func (p ncEPMSMsgType) String() string {
-	switch p {
-	case NC_EPMS_SEND_MSG:
-		return "NC_EPMS_SEND_MSG"
-	case NC_EPMS_REPLY_MSG:
-		return "NC_EPMS_REPLY_MSG"
-	case NC_EPMS_SEND_SUCCESS:
-		return "NC_EPMS_SEND_SUCCESS"
-	case NC_EPMS_SEND_FAILED:
-		return "NC_EPMS_SEND_FAILED"
-	case NC_EPMS_NO_SUBSCRIBER:
-		return "NC_EPMS_NO_SUBSCRIBER"
-	case NC_EPMS_CONNECT:
-		return "NC_EPMS_CONNECT"
-	case NC_EPMS_DISCONNECT:
-		return "NC_EPMS_DISCONNECT"
-	case NC_EPMS_HEARTBEAT:
-		return "NC_EPMS_HEARTBEAT"
-	default:
-		return "UNKNOWN"
-	}
-}
-
 type EpmsHeader struct {
 	magicNum int //魔法数(0x33533)
 	version  int //版本(2)
@@ -62,13 +24,13 @@ type EpmsHeader struct {
 }
 
 type EpmsBody struct {
-	MsgType   ncEPMSMsgType // 消息类型
-	MsgName   string        // 消息名称
-	SourceId  int64         // 回复消息和发送结果回复，需要带之前的sourceId
-	ProtoName string        // 消息类型名，用于消息类型校验
-	BufLength int32         // 缓冲块长度 - 【消息内容长度】
-	Buffer    []byte        // 缓存 buf   - 【消息内容二进制块】
-	Option    int32         // 消息选项（0）
+	MsgType   nc.NcEPMSMsgType // 消息类型
+	MsgName   string           // 消息名称
+	SourceId  int64            // 回复消息和发送结果回复，需要带之前的sourceId
+	ProtoName string           // 消息类型名，用于消息类型校验
+	BufLength int32            // 缓冲块长度 - 【消息内容长度】
+	Buffer    []byte           // 缓存 buf   - 【消息内容二进制块】
+	Option    int32            // 消息选项（0）
 }
 
 type EpmsProtocol struct{}

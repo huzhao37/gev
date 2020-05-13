@@ -7,6 +7,7 @@ require (
 	github.com/Allenxuxu/ringbuffer v0.0.6
 	github.com/Allenxuxu/toolkit v0.0.0-20190930031734-928c4d41e573
 	github.com/RussellLuo/timingwheel v0.0.0-20191015104426-744130d33fdc
+	github.com/apache/thrift v0.13.0
 	github.com/gobwas/httphead v0.0.0-20180130184737-2c6c146eadee
 	github.com/gobwas/pool v0.2.0
 	github.com/golang/protobuf v1.3.2

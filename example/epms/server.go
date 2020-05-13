@@ -5,17 +5,18 @@ import (
 	"context"
 	"flag"
 	"github.com/Allenxuxu/toolkit/sync/atomic"
-	"github.com/huzhao37/gev/example/epms/protocols"
-	"github.com/huzhao37/gev/example/epms/queue"
-	"github.com/leandro-lugaresi/hub"
-	"log"
-	"runtime"
-	"strconv"
-	"sync"
-	"time"
-
 	"github.com/huzhao37/gev"
 	"github.com/huzhao37/gev/connection"
+	"github.com/huzhao37/gev/example/epms/protocols"
+	"github.com/huzhao37/gev/example/epms/queue"
+	t "github.com/huzhao37/gev/example/epms/thrift"
+	"github.com/huzhao37/gev/log"
+	"github.com/leandro-lugaresi/hub"
+	"runtime"
+	"strconv"
+	"strings"
+	"sync"
+	"time"
 )
 
 const (
@@ -26,14 +27,15 @@ const (
 )
 
 type EpmsServer struct {
-	mu                 sync.RWMutex
-	conn               *list.List
-	clientNum          atomic.Int64
-	maxConnection      int64
-	server             *gev.Server
-	ReadQueue          *queue.List
-	SystemWriteQueue   *queue.List
-	BusinessWriteQueue *queue.List
+	mu            sync.RWMutex
+	conn          *list.List
+	clientNum     atomic.Int64
+	maxConnection int64
+	server        *gev.Server
+	SystemQueue   *queue.List
+	BusinessQueue *queue.List
+
+	thrift t.Thrift
 }
 
 // New Epms Server
@@ -57,9 +59,8 @@ func NewEpmsServer(ip string, port int, maxConnection int64, loops int) (*EpmsSe
 
 // Start server
 func (s *EpmsServer) Start() {
-	s.ReadQueue = queue.CreateNew(SystemRead, 10_000)
-	s.SystemWriteQueue = queue.CreateNew(SystemWrite, 10_000)
-	s.BusinessWriteQueue = queue.CreateNew(BizWrite, 10_000)
+	s.SystemQueue = queue.CreateNew(SystemWrite, 10_000)
+	s.BusinessQueue = queue.CreateNew(BizWrite, 10_000)
 
 	s.server.RunEvery(5*time.Second, s.RunPush) //定时发送给hello消息
 	s.server.Start()
@@ -68,15 +69,17 @@ func (s *EpmsServer) Start() {
 // Stop server
 func (s *EpmsServer) Stop() {
 	s.server.Stop()
+	s.SystemQueue.Close()
+	s.BusinessQueue.Close()
 }
 
 func (s *EpmsServer) OnConnect(c *connection.Connection) {
 	s.clientNum.Add(1)
-	log.Println(" OnConnect ： ", c.PeerAddr())
+	log.Info(" OnConnect ： ", c.PeerAddr())
 
 	if s.clientNum.Get() > s.maxConnection {
 		_ = c.ShutdownWrite()
-		log.Println("Refused connection")
+		log.Info("Refused connection")
 		return
 	}
 	s.mu.Lock()
@@ -85,26 +88,28 @@ func (s *EpmsServer) OnConnect(c *connection.Connection) {
 	c.SetContext(e)
 
 	//订阅
-	s.ReadQueue.Subscribe(c.PeerAddr(), s.DistributingMsg)
-	s.SystemWriteQueue.Subscribe(c.PeerAddr(), s.SystemHandlerWrite)
-	s.BusinessWriteQueue.Subscribe(c.PeerAddr(), s.HandlerWrite)
+	s.SystemQueue.Subscribe(c.PeerAddr(), s.SystemHandler)
+	s.BusinessQueue.Subscribe(c.PeerAddr(), s.BusinessHandler)
 }
 
 func (s *EpmsServer) OnMessage(c *connection.Connection, ctx interface{}, data []byte) (out []byte) {
-	log.Println("OnMessage：", data)
-	//发布
-	s.ReadQueue.Publish(c.PeerAddr(), data)
+	log.Info("OnMessage：", data)
+	s.DistributingMsg(c.PeerAddr(), data)
 	out = data
 	return
 }
 
 func (s *EpmsServer) OnClose(c *connection.Connection) {
 	s.clientNum.Add(-1)
-	log.Println("OnClose")
+	log.Info("OnClose")
 	e := c.Context().(*list.Element)
 	s.mu.Lock()
 	s.conn.Remove(e)
 	s.mu.Unlock()
+	//取消订阅
+	//s.ReadQueue.Unsubscribe(c.PeerAddr(), s.DistributingMsg)
+	//s.SystemQueue.Unsubscribe(c.PeerAddr(), s.SystemHandler)
+	//s.BusinessQueue.Unsubscribe(c.PeerAddr(), s.BusinessHandler)
 }
 
 // RunPush push message
@@ -136,8 +141,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-
-	log.Println("server start")
+	log.Info("server start")
 	s.Start()
 }
 
@@ -161,33 +165,106 @@ func (s *EpmsServer) BusinessProcessor(ctx context.Context, servicePath, service
 
 //***add async queue for solve msg order***
 //according to msg type ,write data to bussiness—read-queue  or system-read-queue
-func (s *EpmsServer) DistributingMsg(addr string, msg hub.Message) {
+func (s *EpmsServer) DistributingMsg(addr string, data []byte) {
 	//todo
-	data := msg.Fields["data"].([]byte)
 	//1.unpack(协议中处理后的bytes，再次转换成thrift struct)
 	epmsBody := protocols.BytesToEpmsBody(data)
 	//2.get msg type
 	//3.wirte msg data to queue
 	//系统消息写入系统队列，业务消息写入业务队列
-	if epmsBody.MsgType == protocols.NC_EPMS_HEARTBEAT {
-		s.SystemWriteQueue.Publish(addr, data)
+	if strings.Contains(epmsBody.MsgName, "msg://epms/system") {
+		s.SystemQueue.Publish(addr, data)
 	} else {
-		s.BusinessWriteQueue.Publish(addr, data)
+		s.BusinessQueue.Publish(addr, data)
 	}
 }
 
-func (s *EpmsServer) HandlerWrite(addr string, msg hub.Message) {
+func (s *EpmsServer) BusinessHandler(addr string, msg hub.Message) {
 	//todo
-	//1.msg unpack
+	//1.thrift unpack
 	//2.valid
 	//3.call BusinessProcessor,return result
 	//4.send client
+	data := msg.Fields["data"].([]byte)
+	epmsBody := protocols.BytesToEpmsBody(data)
+	if epmsBody.BufLength != int32(len(epmsBody.Buffer)) {
+		return
+	}
+	urlPath := strings.Replace(epmsBody.MsgName, "msg://epms/", "", -1)
+	if len(urlPath) > 0 && strings.Contains(urlPath, "/") {
+		services := strings.Split(urlPath, "/")
+		if len(services) == 2 {
+			servicePath := services[0]
+			methodName := services[1]
+			args, reply := s.thrift.GetArgsAndReply(epmsBody)
+			res := s.BusinessProcessor(nil, servicePath, methodName, args, reply)
+			log.Info("%v", res)
+			err, buffer := s.thrift.GetResultStructValue(reply)
+			if err != nil {
+				log.Error("【BusinessHandler】%v", err)
+			}
+			epmsBody.BufLength = int32(len(buffer))
+			epmsBody.Buffer = buffer
+
+			var next *list.Element
+			s.mu.RLock()
+			defer s.mu.RUnlock()
+			for e := s.conn.Front(); e != nil; e = next {
+				next = e.Next()
+				c := e.Value.(*connection.Connection)
+				if c.PeerAddr() == addr {
+					err = c.Send(protocols.EpmsBodyToBytes(epmsBody))
+					if err != nil {
+						log.Error("【BusinessHandler-Send】%v", err)
+					}
+					break
+				}
+			}
+		}
+	}
 }
 
-func (s *EpmsServer) SystemHandlerWrite(addr string, msg hub.Message) {
+func (s *EpmsServer) SystemHandler(addr string, msg hub.Message) {
 	//todo
-	//1.msg unpack
+	//1.thrift unpack
 	//2.valid
 	//3.call SystemProcessor,return result
 	//4.send client
+	data := msg.Fields["data"].([]byte)
+	epmsBody := protocols.BytesToEpmsBody(data)
+	if epmsBody.BufLength != int32(len(epmsBody.Buffer)) {
+		return
+	}
+	urlPath := strings.Replace(epmsBody.MsgName, "msg://epms/", "", -1)
+	if len(urlPath) > 0 && strings.Contains(urlPath, "/") {
+		services := strings.Split(urlPath, "/")
+		if len(services) == 2 {
+			servicePath := services[0]
+			methodName := services[1]
+			args, reply := s.thrift.GetArgsAndReply(epmsBody)
+			res := s.SystemProcessor(nil, servicePath, methodName, args, reply)
+			log.Info("%v", res)
+			err, buffer := s.thrift.GetResultStructValue(reply)
+			if err != nil {
+				log.Error("【SystemHandler】%v", err)
+			}
+			epmsBody.BufLength = int32(len(buffer))
+			epmsBody.Buffer = buffer
+
+			var next *list.Element
+			s.mu.RLock()
+			defer s.mu.RUnlock()
+			for e := s.conn.Front(); e != nil; e = next {
+				next = e.Next()
+				c := e.Value.(*connection.Connection)
+				if c.PeerAddr() == addr {
+					err = c.Send(protocols.EpmsBodyToBytes(epmsBody))
+					if err != nil {
+						log.Error("【SystemHandler-Send】%v", err)
+					}
+					break
+				}
+			}
+		}
+	}
 }
