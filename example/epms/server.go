@@ -63,7 +63,7 @@ func (s *EpmsServer) Start() {
 	s.SystemQueue = queue.CreateNew(SystemWrite, 10_000)
 	s.BusinessQueue = queue.CreateNew(BizWrite, 10_000)
 
-	s.server.RunEvery(5*time.Second, s.RunPush) //定时发送给hello消息
+	//s.server.RunEvery(5*time.Second, s.RunPush) //定时发送给hello消息
 	s.server.Start()
 }
 

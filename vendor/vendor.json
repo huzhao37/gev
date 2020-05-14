@@ -1,0 +1,60 @@
+{
+	"comment": "",
+	"ignore": "test",
+	"package": [
+		{
+			"checksumSHA1": "0c44HsFH4NZsncHQ70iI8EjAG0Y=",
+			"path": "github.com/Allenxuxu/toolkit/convert",
+			"revision": "464ad98cbe758c2ee163ca3cf229da02aeb97726",
+			"revisionTime": "2020-04-26T07:02:40Z"
+		},
+		{
+			"checksumSHA1": "a+SRx6pkXerPIqLMzi2080+ElfM=",
+			"path": "github.com/Allenxuxu/toolkit/sync",
+			"revision": "464ad98cbe758c2ee163ca3cf229da02aeb97726",
+			"revisionTime": "2020-04-26T07:02:40Z"
+		},
+		{
+			"checksumSHA1": "RU/m/XjNYi0xQ0Yt6BO50NmUt+4=",
+			"path": "github.com/Allenxuxu/toolkit/sync/atomic",
+			"revision": "464ad98cbe758c2ee163ca3cf229da02aeb97726",
+			"revisionTime": "2020-04-26T07:02:40Z"
+		},
+		{
+			"checksumSHA1": "3QZzuLSiXEU+9wnHgXScv6NFL2U=",
+			"path": "github.com/Allenxuxu/toolkit/sync/spinlock",
+			"revision": "464ad98cbe758c2ee163ca3cf229da02aeb97726",
+			"revisionTime": "2020-04-26T07:02:40Z"
+		},
+		{
+			"checksumSHA1": "cqPdsil0cVnJ3Ub3fvxz2W0+CG0=",
+			"path": "github.com/apache/thrift/lib/go/thrift",
+			"revision": "102428d35da461aec0f3d8a513e4a21bb56ddb69",
+			"revisionTime": "2020-03-14T09:30:12Z"
+		},
+		{
+			"checksumSHA1": "Q3FteGbNvRRUMJqbYbmrcBd2DMo=",
+			"path": "github.com/golang/protobuf/proto",
+			"revision": ""
+		},
+		{
+			"checksumSHA1": "oVgvuicuuj04oXVWfQcnIWVZW/o=",
+			"path": "github.com/leandro-lugaresi/hub",
+			"revision": "5d3f1021eab7fdab9d6006ff995144e7268ca9ed",
+			"revisionTime": "2020-01-14T03:35:57Z"
+		},
+		{
+			"checksumSHA1": "n3mE8lM/N2dNMAZVtawNQR6DhGk=",
+			"path": "golang.org/x/net/websocket",
+			"revision": "d3edc9973b7eb1fb302b0ff2c62357091cea9a30",
+			"revisionTime": "2020-03-24T14:35:11Z"
+		},
+		{
+			"checksumSHA1": "YfJoUcabFvOmA4QN35p4IqjVJlI=",
+			"path": "golang.org/x/sys/unix",
+			"revision": "85ca7c5b95cdf1e557abb38a283d1e61a5959c31",
+			"revisionTime": "2020-03-23T19:04:34Z"
+		}
+	],
+	"rootPath": "github.com/huzhao37/gev"
+}
