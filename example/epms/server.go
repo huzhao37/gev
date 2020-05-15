@@ -44,6 +44,7 @@ func NewEpmsServer(ip string, port int, maxConnection int64, loops int) (*EpmsSe
 	var err error
 	s := new(EpmsServer)
 	s.maxConnection = maxConnection
+	s.conn = list.New()
 	s.server, err = gev.NewServer(s,
 		gev.Network("tcp"),
 		gev.Address(":"+strconv.Itoa(port)),

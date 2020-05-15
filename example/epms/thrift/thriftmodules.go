@@ -28,9 +28,13 @@ type ThriftHandlers struct {
 }
 
 func (t *Thrift) setArgsStructValue(st thrift.TStruct, buffer []byte) error {
-	iprot := t.protocolFactory.GetProtocol(&thrift.TMemoryBuffer{
-		Buffer: bytes.NewBuffer(buffer),
-	})
+
+	trans := &thrift.TMemoryBuffer{Buffer: bytes.NewBuffer(buffer)}
+	iprot := thrift.NewTCompactProtocol(trans)
+
+	//iprot := t.protocolFactory.GetProtocol(&thrift.TMemoryBuffer{
+	//	Buffer: bytes.NewBuffer(buffer),
+	//})
 
 	if err := st.Read(iprot); err != nil {
 		iprot.ReadMessageEnd()
@@ -42,8 +46,10 @@ func (t *Thrift) setArgsStructValue(st thrift.TStruct, buffer []byte) error {
 }
 
 func (t *Thrift) GetArgsStructBuffer(st thrift.TStruct) (error, []byte) {
-	bufferProt := &thrift.TMemoryBuffer{}
-	iprot := t.protocolFactory.GetProtocol(bufferProt)
+	//bufferProt := &thrift.TMemoryBuffer{}
+	//iprot := t.protocolFactory.GetProtocol(bufferProt)
+	bufferProt := thrift.NewTMemoryBuffer()
+	iprot := thrift.NewTCompactProtocol(bufferProt)
 
 	if err := st.Write(iprot); err != nil {
 		return err, nil
