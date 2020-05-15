@@ -7,7 +7,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/huzhao37/gev/example/epms/protocols"
 	"log"
 	"reflect"
 	"sync"
@@ -52,9 +51,9 @@ type Call struct {
 type inprocessClient struct {
 	services map[string]interface{}
 	sync.RWMutex
-	methods           map[string]*reflect.Value
-	mmu               sync.RWMutex
-	ServerMessageChan chan<- *protocols.Message
+	methods map[string]*reflect.Value
+	mmu     sync.RWMutex
+	//ServerMessageChan chan<- *protocols.Message
 }
 
 func (call *Call) done() {
