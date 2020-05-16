@@ -9,10 +9,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Allenxuxu/gev/connection"
-	"github.com/Allenxuxu/gev/log"
 	"github.com/Allenxuxu/toolkit/sync"
 	"github.com/Allenxuxu/toolkit/sync/atomic"
+	"github.com/huzhao37/gev/connection"
+	"github.com/huzhao37/gev/log"
 )
 
 type example struct {

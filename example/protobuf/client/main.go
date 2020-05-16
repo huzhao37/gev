@@ -8,9 +8,9 @@ import (
 	"net"
 	"os"
 
-	pb "github.com/Allenxuxu/gev/example/protobuf/proto"
-	"github.com/Allenxuxu/gev/plugins/protobuf"
 	"github.com/golang/protobuf/proto"
+	pb "github.com/huzhao37/gev/example/protobuf/proto"
+	"github.com/huzhao37/gev/plugins/protobuf"
 )
 
 func main() {

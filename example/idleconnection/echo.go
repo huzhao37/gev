@@ -7,9 +7,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/Allenxuxu/gev"
-	"github.com/Allenxuxu/gev/connection"
-	"github.com/Allenxuxu/gev/log"
+	"github.com/huzhao37/gev"
+	"github.com/huzhao37/gev/connection"
+	"github.com/huzhao37/gev/log"
 )
 
 type example struct {

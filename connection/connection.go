@@ -7,14 +7,14 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/Allenxuxu/gev/eventloop"
-	"github.com/Allenxuxu/gev/log"
-	"github.com/Allenxuxu/gev/poller"
 	"github.com/Allenxuxu/ringbuffer"
 	"github.com/Allenxuxu/ringbuffer/pool"
 	"github.com/Allenxuxu/toolkit/sync/atomic"
 	"github.com/RussellLuo/timingwheel"
 	"github.com/gobwas/pool/pbytes"
+	"github.com/huzhao37/gev/eventloop"
+	"github.com/huzhao37/gev/log"
+	"github.com/huzhao37/gev/poller"
 	"golang.org/x/sys/unix"
 )
 
@@ -186,7 +186,8 @@ func (c *Connection) handleRead(fd int) {
 			_, _ = c.inBuffer.Write(first)
 		}
 		if len(out) != 0 {
-			c.sendInLoop(out)
+			//不立即回复消息,手动回复，一个read协程读取队列任务，并主动回复相应的客户端
+			//c.sendInLoop(out)
 		}
 
 		pbytes.Put(out)
@@ -194,7 +195,8 @@ func (c *Connection) handleRead(fd int) {
 		_, _ = c.inBuffer.Write(buf[:n])
 		out := c.handlerProtocol(c.inBuffer)
 		if len(out) != 0 {
-			c.sendInLoop(out)
+			//不立即回复消息,手动回复
+			//c.sendInLoop(out)
 		}
 
 		pbytes.Put(out)

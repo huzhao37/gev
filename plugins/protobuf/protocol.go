@@ -1,9 +1,9 @@
 package protobuf
 
 import (
-	"github.com/Allenxuxu/gev/connection"
 	"github.com/Allenxuxu/ringbuffer"
 	"github.com/gobwas/pool/pbytes"
+	"github.com/huzhao37/gev/connection"
 )
 
 // Message 数据帧定义

@@ -1,0 +1,159 @@
+/**
+ * @Author: hiram
+ * @Date: 2020/5/13 10:44
+ */
+package thrift
+
+import (
+	"bytes"
+	"context"
+	"fmt"
+	"github.com/apache/thrift/lib/go/thrift"
+	"github.com/huzhao37/gev/epms/DivModService/protocols/gen-go/cluster"
+	nc "github.com/huzhao37/gev/epms/protocols/gen-go/ncbaseheader"
+	"github.com/huzhao37/gev/log"
+	"reflect"
+)
+
+//!#obselete
+type Thrift struct {
+	processor       *thrift.TMultiplexedProcessor
+	protocolFactory *thrift.TCompactProtocolFactory
+}
+
+//!#obselete
+type ThriftHandlers struct {
+	ServiceName string
+	Processor   thrift.TProcessor
+}
+
+func (t *Thrift) GetStructValue(st thrift.TStruct, buffer []byte) error {
+
+	trans := &thrift.TMemoryBuffer{Buffer: bytes.NewBuffer(buffer)}
+	iprot := thrift.NewTCompactProtocol(trans)
+
+	//iprot := t.protocolFactory.GetProtocol(&thrift.TMemoryBuffer{
+	//	Buffer: bytes.NewBuffer(buffer),
+	//})
+
+	if err := st.Read(iprot); err != nil {
+		iprot.ReadMessageEnd()
+		log.Error("【GetArgsStructValue】%s", err)
+		return err
+	}
+	iprot.ReadMessageEnd()
+	return nil
+}
+
+func (t *Thrift) GetStructBuffer(st thrift.TStruct) (error, []byte) {
+	//bufferProt := &thrift.TMemoryBuffer{}
+	//iprot := t.protocolFactory.GetProtocol(bufferProt)
+	bufferProt := thrift.NewTMemoryBuffer()
+	iprot := thrift.NewTCompactProtocol(bufferProt)
+
+	if err := st.Write(iprot); err != nil {
+		return err, nil
+	}
+	if err := iprot.WriteMessageEnd(); err != nil {
+		return err, nil
+	}
+	return nil, bufferProt.Buffer.Bytes()
+}
+
+//func (t *Thrift) GetResultStructBuffer(st thrift.TStruct) (error, []byte) {
+//	bufferProt :=  thrift.NewTMemoryBuffer()
+//	oprot :=  thrift.NewTCompactProtocol(bufferProt)
+//
+//	var err error
+//	if err = st.Write(oprot); err != nil {
+//		return err, nil
+//	}
+//	if err = oprot.WriteMessageEnd(); err != nil {
+//		return err, nil
+//	}
+//	return nil, bufferProt.Buffer.Bytes()
+//}
+
+//get args struct by name
+func (t *Thrift) GetStruct(structName string) thrift.TStruct {
+	switch structName {
+	//todo
+	case "DivModDoDivModArgs":
+		return cluster.NewDivModDoDivModArgs()
+	case "DivModDoDivModResult":
+		return &cluster.DivModDoDivModResult{Success: cluster.NewResult_()}
+	default:
+		//test
+		return cluster.NewDivModDoDivModArgs()
+	}
+
+}
+
+//get args &r reply
+func (t *Thrift) GetArgsAndReply(epmsBody *nc.NcEPMSMsgHeader) (thrift.TStruct, thrift.TStruct) {
+	//根据msgtype,msgname ,protoName 获取相应的入参和出参
+	//todo
+	//test
+	args := t.GetStruct("DivModDoDivModArgs")
+	err := t.GetStructValue(args, epmsBody.Buffer)
+	if err != nil {
+		log.Error("【GetArgsAndReply】%s", err)
+	}
+	return args, t.GetStruct("DivModDoDivModResult")
+}
+
+//!#obselete
+// Call calls a service
+func (t *Thrift) Call(servicePath, serviceMethod string, args interface{}, reply interface{}) (err error) {
+	defer func() {
+		if e := recover(); e != nil {
+			var ok bool
+			if err, ok = e.(error); ok {
+				err = fmt.Errorf("failed to call %s.%s because of %v", servicePath, serviceMethod, err)
+			}
+		}
+	}()
+
+	var mv = &reflect.Value{}
+	if mv == nil {
+		//v := reflect.ValueOf(service)
+		//t := v.MethodByName(serviceMethod)
+		//if t == (reflect.Value{}) {
+		//return fmt.Errorf("method %s.%s not found", servicePath, serviceMethod)
+		//}
+		//mv = &t
+	}
+
+	argv := reflect.ValueOf(args)
+	replyv := reflect.ValueOf(reply)
+
+	err = nil
+	returnValues := mv.Call([]reflect.Value{argv, replyv})
+	errInter := returnValues[0].Interface()
+	if errInter != nil {
+		err = errInter.(error)
+	}
+
+	return err
+}
+
+//register thrift service
+func (t *Thrift) RegisterThriftProcessor(handlers []ThriftHandlers) {
+
+	t.processor = thrift.NewTMultiplexedProcessor()
+	// 给每个service起一个名字
+	if len(handlers) > 0 {
+		for _, handler := range handlers {
+			t.processor.RegisterProcessor(handler.ServiceName, handler.Processor)
+		}
+	}
+	t.protocolFactory = thrift.NewTCompactProtocolFactory()
+}
+
+func (t *Thrift) Process(ctx context.Context, data []byte) {
+	transport := &thrift.TMemoryBuffer{
+		Buffer: bytes.NewBuffer(data),
+	}
+	ipro := t.protocolFactory.GetProtocol(transport)
+	t.processor.Process(ctx, ipro, ipro)
+}

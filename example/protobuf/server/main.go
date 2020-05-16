@@ -5,11 +5,11 @@ import (
 	"log"
 	"strconv"
 
-	"github.com/Allenxuxu/gev"
-	"github.com/Allenxuxu/gev/connection"
-	pb "github.com/Allenxuxu/gev/example/protobuf/proto"
-	"github.com/Allenxuxu/gev/plugins/protobuf"
 	"github.com/golang/protobuf/proto"
+	"github.com/huzhao37/gev"
+	"github.com/huzhao37/gev/connection"
+	pb "github.com/huzhao37/gev/example/protobuf/proto"
+	"github.com/huzhao37/gev/plugins/protobuf"
 )
 
 type example struct{}

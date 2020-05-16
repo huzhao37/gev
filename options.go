@@ -3,7 +3,7 @@ package gev
 import (
 	"time"
 
-	"github.com/Allenxuxu/gev/connection"
+	"github.com/huzhao37/gev/connection"
 )
 
 // Options 服务配置
